@@ -1,10 +1,17 @@
 # WhatsApp Electron
 
-A feature-rich WhatsApp Desktop client for Linux, specifically optimized for KDE Plasma.
+A feature-rich WhatsApp Desktop client for Linux, specifically optimized for **KDE Plasma** and **GNOME** desktop environments.
+
+## Focus
+
+This build is specifically designed and tested for:
+- **KDE Plasma** (primary target) - Full integration with badges, notifications, and theme-aware tray icons
+- **GNOME** - Support for dark/light mode detection and system integration
 
 ## Features
 
-- **WhatsApp Web Integration** - Full WhatsApp Web functionality in a native app
+### Core Features
+- **WhatsApp Web Integration** - Full WhatsApp Web functionality in electron app
 - **System Notifications** - Native Linux notifications via libnotify
 - **System Tray Icon** - Minimize to tray with unread message indicator
 - **Taskbar Badge Count** - Unread message count on taskbar icon
@@ -13,11 +20,21 @@ A feature-rich WhatsApp Desktop client for Linux, specifically optimized for KDE
 - **Spell Checker** - Built-in spell checking powered by Chromium
 - **Close to Tray** - App continues running in background when closed
 - **Window State Persistence** - Remembers window size, position, and maximized state
-- **KDE Plasma Integration** - Designed for KDE with proper theme integration
 
-## Screenshots
+### Desktop Environment Integration
 
-_Add screenshots here after running the app_
+#### KDE Plasma
+- **Theme-Aware Tray Icons** - Automatically switches between light/dark tray icons based on your Plasma color scheme
+- **Native Badge Count** - Unread message count displayed on taskbar (requires `libunity9` on Plasma 5)
+- **KDE Notifications** - Full integration with KDE's notification system
+
+#### GNOME
+- **Dark/Light Mode Detection** - Automatically detects GNOME's color scheme preference (`prefer-dark`/`prefer-light`)
+- **GTK Theme Fallback** - Falls back to GTK theme detection for older GNOME versions
+- **System Tray Support** - Works with GNOME's AppIndicator extensions
+
+### UX Improvements
+- **Right-Click Message Menu** - Right-click on any message to open the context menu (Reply, Copy, React, Forward, Pin, Star, Delete) instead of hovering for the small arrow button
 
 ## Installation
 
@@ -92,18 +109,6 @@ After installation, you can:
 - Launch from application menu
 - Run `npm start` from source directory
 - Execute the AppImage directly
-
-### Keyboard Shortcuts
-
-- **Ctrl+Shift+W** - Toggle window visibility (global)
-- **Ctrl+H** - Hide window
-- **Ctrl+Q** - Quit application
-- **Ctrl+F** - Search (WhatsApp's native search)
-- **Ctrl+R** - Reload
-- **Ctrl+Shift+I** - Toggle Developer Tools
-- **F11** - Toggle fullscreen
-
-Standard editing shortcuts (Ctrl+C, Ctrl+V, Ctrl+X, etc.) work as expected.
 
 ### System Tray
 
@@ -284,41 +289,14 @@ This app:
 - All communication is directly with WhatsApp's servers
 - Session data is stored locally on your machine
 
-## System Requirements
-
-### Minimum
-
-- Ubuntu 20.04 or newer with KDE Plasma
-- 2 GB RAM
-- 500 MB disk space
-- Internet connection
-
-### Recommended
-
-- Ubuntu 22.04 or newer with KDE Plasma 5.24+
-- 4 GB RAM
-- 1 GB disk space
-- Broadband internet connection
-
-## Known Issues
-
-- Badge count requires libunity9 on KDE Plasma 5
-- Some KDE themes may affect tray icon appearance
-- Auto-updater only works with AppImage builds
-
-## Roadmap
-
-- [ ] Multi-account support
-- [ ] Custom notification sounds
-- [ ] Themes/appearance customization
-- [ ] Export chat history
-- [ ] KDE Connect integration
-- [ ] Flatpak packaging
-- [ ] Snap packaging
-
 ## Version History
 
-### 1.0.0 (Current)
+### 1.1.0 (Current)
+
+- **Right-Click Context Menu** - Right-click on messages to open Reply/React/Forward menu
+- **Improved Theme Detection** - Unified theme detection for KDE, GNOME, and other desktop environments
+
+### 1.0.0
 
 Initial release with:
 - WhatsApp Web integration

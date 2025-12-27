@@ -5,6 +5,7 @@ package-lock.json
 # Build output
 dist/
 out/
+build/
 
 # Electron
 *.log

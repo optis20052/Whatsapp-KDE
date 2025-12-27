@@ -1,11 +1,11 @@
 {
-  "name": "whatsapp-electron",
+  "name": "whatsapp-electron-kde",
   "version": "1.0.0",
   "description": "WhatsApp Desktop Client for Linux with KDE Plasma integration",
   "main": "src/main/index.js",
   "author": "Your Name",
   "license": "MIT",
-  "homepage": "https://github.com/yourusername/whatsapp-electron",
+  "homepage": "https://github.com/optis20052/whatsapp-electron-kde",
   "scripts": {
     "start": "electron .",
     "dev": "NODE_ENV=development electron .",
@@ -45,13 +45,15 @@
       ],
       "category": "Network;InstantMessaging",
       "icon": "build/icons/icon.png",
-      "maintainer": "your.email@example.com",
+      "maintainer": "optis20052@gmail.com",
       "desktop": {
-        "Name": "WhatsApp",
-        "Comment": "WhatsApp Desktop Client",
-        "Type": "Application",
-        "Categories": "Network;InstantMessaging;",
-        "StartupWMClass": "whatsapp-electron"
+        "entry": {
+          "Name": "WhatsApp",
+          "Comment": "WhatsApp Desktop Client",
+          "Type": "Application",
+          "Categories": "Network;InstantMessaging;",
+          "StartupWMClass": "whatsapp-electron"
+        }
       }
     },
     "appImage": {
@@ -59,8 +61,8 @@
     },
     "publish": {
       "provider": "github",
-      "owner": "yourusername",
-      "repo": "whatsapp-electron"
+      "owner": "optis20052",
+      "repo": "whatsapp-electron-kde"
     }
   }
 }
