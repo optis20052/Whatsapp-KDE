@@ -13,11 +13,13 @@ export function showNotification(data, mainWindow) {
     body: body || '',
     icon: path.join(__dirname, '../assets/icons/icon.png'),
     urgency: 'normal',
-    sound: true,
     timeoutType: 'default'
   });
 
   notification.on('click', () => {
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
     mainWindow.show();
     mainWindow.focus();
 

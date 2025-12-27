@@ -8,43 +8,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
 });
 
 window.addEventListener('DOMContentLoaded', () => {
-  class ElectronNotification {
-    constructor(title, options = {}) {
-      this.title = title;
-      this.body = options.body || '';
-      this.icon = options.icon || '';
-      this.tag = options.tag || '';
-
-      ipcRenderer.send('show-notification', {
-        title,
-        body: this.body,
-        icon: this.icon,
-        tag: this.tag
-      });
-
-      this.onclick = null;
-      this.onerror = null;
-      this.onclose = null;
-      this.onshow = null;
-    }
-
-    close() {}
-
-    static requestPermission() {
-      return Promise.resolve('granted');
-    }
-
-    static get permission() {
-      return 'granted';
-    }
-
-    static get maxActions() {
-      return 0;
-    }
-  }
-
-  window.Notification = ElectronNotification;
-
   let lastCount = 0;
 
   function updateBadgeCount() {
@@ -74,26 +37,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(updateBadgeCount, 3000);
 
-  // Right-click on messages to open the message menu (Reply, React, etc.)
+  // Right-click on messages to open the message menu
   document.addEventListener('contextmenu', (event) => {
-    // Find if we clicked on or inside a message bubble
-    // Messages have data-id attribute with format like "true_xxx" or "false_xxx"
     const messageElement = event.target.closest('[data-id]');
     if (!messageElement) return;
 
-    // Verify this is a message by checking the data-id format
     const dataId = messageElement.getAttribute('data-id');
     if (!dataId || (!dataId.startsWith('true_') && !dataId.startsWith('false_'))) return;
 
-    // Prevent the default context menu
     event.preventDefault();
     event.stopPropagation();
 
-    // Find the dropdown arrow button - it has data-js-context-icon="true"
-    // and contains an icon with data-icon="ic-chevron-down-menu"
     let dropdownButton = messageElement.querySelector('[data-js-context-icon="true"]');
 
-    // If not found directly in the message, look in parent row
     if (!dropdownButton) {
       const row = messageElement.closest('[role="row"]');
       if (row) {
@@ -101,7 +57,6 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Also try finding by the icon inside
     if (!dropdownButton) {
       const icon = messageElement.querySelector('[data-icon="ic-chevron-down-menu"]');
       if (icon) {
@@ -110,13 +65,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     if (dropdownButton) {
-      // The button might be hidden until hover, so we need to trigger hover first
-      // Find the message container that shows the button on hover
       const messageContainer = messageElement.closest('.message-in, .message-out') ||
                                messageElement.closest('[class*="message"]') ||
                                messageElement;
 
-      // Dispatch mouseenter to trigger hover state
       const mouseEnterEvent = new MouseEvent('mouseenter', {
         bubbles: true,
         cancelable: true,
@@ -124,7 +76,6 @@ window.addEventListener('DOMContentLoaded', () => {
       });
       messageContainer.dispatchEvent(mouseEnterEvent);
 
-      // Also dispatch mouseover
       const mouseOverEvent = new MouseEvent('mouseover', {
         bubbles: true,
         cancelable: true,
@@ -134,7 +85,6 @@ window.addEventListener('DOMContentLoaded', () => {
       });
       messageContainer.dispatchEvent(mouseOverEvent);
 
-      // Small delay to allow the button to become visible, then click
       setTimeout(() => {
         dropdownButton.click();
       }, 100);
