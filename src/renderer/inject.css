@@ -1,0 +1,44 @@
+/* WhatsApp Electron - Custom Styles */
+
+/* Hide WhatsApp's desktop app download banner */
+._3cJIb,
+div[data-testid="download-nux"],
+div[data-animate-dropdown-item="true"]:has(a[href*="whatsapp.com/download"]) {
+  display: none !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111b21;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b4a54;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4a5d69;
+}
+
+::-webkit-scrollbar-corner {
+  background: #111b21;
+}
+
+/* Text selection */
+::selection {
+  background-color: #075e54;
+  color: white;
+}
+
+/* Prevent text selection in UI elements */
+[role="button"],
+button {
+  user-select: none;
+}

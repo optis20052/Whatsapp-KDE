@@ -1,0 +1,12 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Name=WhatsApp Custom
+Comment=Custom WhatsApp Desktop Client
+Exec=/home/ali/Projects/WhatsApp/launch.sh
+Icon=/home/ali/Projects/WhatsApp/src/assets/icons/icon.png
+Type=Application
+Categories=Network;InstantMessaging;Chat;
+StartupWMClass=whatsapp-electron
+StartupNotify=true
+Terminal=false
+Path=/home/ali/Projects/WhatsApp
