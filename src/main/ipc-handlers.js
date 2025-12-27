@@ -14,7 +14,8 @@ try {
 }
 
 function setKDEBadge(count, urgent = false) {
-  const desktopFile = 'whatsapp-electron.desktop';
+  // Desktop file name matches the 'name' field in package.json (electron-builder uses this)
+  const desktopFile = 'whatsapp-electron-kde.desktop';
   const appUri = `application://${desktopFile}`;
 
   if (sessionBus && sessionBus.connection) {
