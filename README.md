@@ -55,7 +55,7 @@ sudo apt install libunity9
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/whatsapp-electron.git
+git clone https://github.com/optis20052/Whatsapp-KDE.git
 cd whatsapp-electron
 ```
 
@@ -278,7 +278,7 @@ This is an unofficial WhatsApp client. WhatsApp and the WhatsApp logo are tradem
 
 ## Support
 
-For issues and feature requests, please use the [GitHub issue tracker](https://github.com/yourusername/whatsapp-electron/issues).
+For issues and feature requests, please use the [GitHub issue tracker](https://github.com/optis20052/Whatsapp-KDE/issues).
 
 ## Privacy
 
