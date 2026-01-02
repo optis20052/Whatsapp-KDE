@@ -80,11 +80,40 @@ export function createMainWindow() {
           const tag = options.tag || null;
 
           if (window.electronAPI && window.electronAPI.sendNotification) {
-            window.electronAPI.sendNotification({
-              title: title,
-              body: options.body || '',
-              tag: tag
-            });
+            const iconUrl = options.icon || null;
+
+            // Convert blob URL to data URL if needed
+            if (iconUrl && iconUrl.startsWith('blob:')) {
+              fetch(iconUrl)
+                .then(r => r.blob())
+                .then(blob => {
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    window.electronAPI.sendNotification({
+                      title: title,
+                      body: options.body || '',
+                      tag: tag,
+                      icon: reader.result
+                    });
+                  };
+                  reader.readAsDataURL(blob);
+                })
+                .catch(() => {
+                  window.electronAPI.sendNotification({
+                    title: title,
+                    body: options.body || '',
+                    tag: tag,
+                    icon: null
+                  });
+                });
+            } else {
+              window.electronAPI.sendNotification({
+                title: title,
+                body: options.body || '',
+                tag: tag,
+                icon: iconUrl
+              });
+            }
           }
 
           this.title = title;
