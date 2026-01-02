@@ -13,6 +13,7 @@ import { setupIpcHandlers } from './ipc-handlers.js';
 import { registerShortcuts, unregisterShortcuts } from './shortcuts.js';
 import { createMenu } from './menu.js';
 import { setupAutoUpdater, stopAutoUpdater } from './updater.js';
+import { activeNotificationIds, removeNotificationId, getNotificationMeta } from './notifications.js';
 
 // Check if running on KDE
 function isKDE() {
@@ -79,14 +80,37 @@ if (!gotTheLock) {
     setupAutoUpdater(mainWindow);
 
     // On KDE Wayland, listen for notification clicks via DBus and force-activate window
+    // Only respond to notifications that we created (tracked by notification ID)
     if (process.platform === 'linux') {
       try {
         const sessionBus = dbusNative.sessionBus();
+        // Listen for both ActionInvoked (click) and NotificationClosed (cleanup)
         sessionBus.addMatch("type='signal',interface='org.freedesktop.Notifications',member='ActionInvoked'", () => {});
+        sessionBus.addMatch("type='signal',interface='org.freedesktop.Notifications',member='NotificationClosed'", () => {});
         sessionBus.connection.on('message', (msg) => {
-          if (msg.interface === 'org.freedesktop.Notifications' && msg.member === 'ActionInvoked') {
-            if (mainWindow) {
-              forceActivateWindow();
+          if (msg.interface === 'org.freedesktop.Notifications') {
+            // The notification ID is the first element in the message body
+            const notificationId = msg.body && msg.body[0];
+
+            if (msg.member === 'ActionInvoked') {
+              // Only activate window if this is OUR notification
+              if (notificationId && activeNotificationIds.has(notificationId)) {
+                if (mainWindow) {
+                  forceActivateWindow();
+
+                  // Handle tag-based navigation if available
+                  const notifData = getNotificationMeta(notificationId);
+                  if (notifData && notifData.tag) {
+                    mainWindow.webContents.send('notification-clicked', notifData.tag);
+                  }
+                }
+                removeNotificationId(notificationId);
+              }
+            } else if (msg.member === 'NotificationClosed') {
+              // Clean up notification ID when notification is dismissed/closed
+              if (notificationId) {
+                removeNotificationId(notificationId);
+              }
             }
           }
         });

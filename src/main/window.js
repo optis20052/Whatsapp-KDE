@@ -67,6 +67,94 @@ export function createMainWindow() {
     } catch (error) {
       // CSS injection failed
     }
+
+    // Inject Notification override into the page's main world
+    // This intercepts WhatsApp's notifications and routes them through our IPC
+    win.webContents.executeJavaScript(`
+      (function() {
+        window.__notificationHandlers = window.__notificationHandlers || {};
+
+        window.Notification = function(title, options) {
+          options = options || {};
+          const self = this;
+          const tag = options.tag || null;
+
+          if (window.electronAPI && window.electronAPI.sendNotification) {
+            window.electronAPI.sendNotification({
+              title: title,
+              body: options.body || '',
+              tag: tag
+            });
+          }
+
+          this.title = title;
+          this.body = options.body;
+          this.tag = tag;
+          this._onclick = null;
+
+          Object.defineProperty(this, 'onclick', {
+            get: function() { return self._onclick; },
+            set: function(fn) {
+              self._onclick = fn;
+              if (tag && fn) {
+                window.__notificationHandlers[tag] = { handler: fn, title: title };
+              }
+            }
+          });
+
+          this.addEventListener = function(type, handler) {
+            if (type === 'click' && tag && handler) {
+              window.__notificationHandlers[tag] = { handler: handler, title: title };
+            }
+          };
+
+          this.removeEventListener = function() {};
+          this.onclose = null;
+          this.onerror = null;
+          this.onshow = null;
+          this.close = function() {};
+
+          setTimeout(() => {
+            if (this.onshow) this.onshow({ target: this });
+          }, 100);
+
+          return this;
+        };
+
+        window.Notification.permission = 'granted';
+        window.Notification.requestPermission = function(cb) {
+          if (cb) cb('granted');
+          return Promise.resolve('granted');
+        };
+
+        if (window.electronAPI && window.electronAPI.onNotificationClick) {
+          window.electronAPI.onNotificationClick((event, tag) => {
+            const data = window.__notificationHandlers[tag];
+            if (data && data.handler) {
+              try {
+                data.handler({ target: { tag: tag } });
+              } catch(e) {}
+            } else {
+              // Fallback: find and click the chat by title
+              const title = data ? data.title : null;
+              if (title) {
+                const chatEl = document.querySelector('[title="' + title + '"]');
+                if (chatEl) {
+                  const row = chatEl.closest('[role="row"]');
+                  if (row) { row.click(); return; }
+                }
+              }
+              const phone = tag.replace('@c.us', '').replace('@g.us', '');
+              const chatByPhone = document.querySelector('[title*="' + phone + '"]');
+              if (chatByPhone) {
+                const row = chatByPhone.closest('[role="row"]');
+                if (row) { row.click(); }
+              }
+            }
+          });
+        }
+      })();
+    `).catch(() => {});
   });
 
   win.on('close', () => {

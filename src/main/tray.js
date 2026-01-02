@@ -1,4 +1,4 @@
-import { Tray, Menu, app, nativeImage, Notification, nativeTheme } from 'electron';
+import { Tray, Menu, app, nativeImage, nativeTheme } from 'electron';
 import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
@@ -8,9 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let tray = null;
-let isFirstClose = true;
 let currentUnreadCount = 0;
-const defaultIconPath = path.join(__dirname, '../assets/icons/icon-24x24.png');
 
 // Detect desktop environment
 function getDesktopEnvironment() {
@@ -142,16 +140,6 @@ export function createTray(mainWindow) {
     if (!app.isQuitting) {
       event.preventDefault();
       mainWindow.hide();
-
-      if (isFirstClose) {
-        const notification = new Notification({
-          title: 'WhatsApp is still running',
-          body: 'Click the system tray icon to open WhatsApp again',
-          icon: defaultIconPath
-        });
-        notification.show();
-        isFirstClose = false;
-      }
     }
   });
 
