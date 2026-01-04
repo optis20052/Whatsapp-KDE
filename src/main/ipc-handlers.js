@@ -1,4 +1,4 @@
-import { ipcMain, app } from 'electron';
+import { ipcMain, app, clipboard, nativeImage } from 'electron';
 import { showNotification } from './notifications.js';
 import { updateTrayIcon } from './tray.js';
 import { exec } from 'child_process';
@@ -80,6 +80,20 @@ export function setupIpcHandlers(mainWindow) {
       return 'file://' + tempPath;
     } catch (error) {
       return null;
+    }
+  });
+
+  // Copy image to clipboard from base64 data URL
+  ipcMain.handle('copy-image-to-clipboard', async (event, dataUrl) => {
+    try {
+      const image = nativeImage.createFromDataURL(dataUrl);
+      if (image.isEmpty()) {
+        return { success: false, error: 'Failed to create image' };
+      }
+      clipboard.writeImage(image);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
     }
   });
 }

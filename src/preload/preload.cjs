@@ -5,11 +5,105 @@ contextBridge.exposeInMainWorld('electronAPI', {
   updateBadge: (count) => ipcRenderer.send('update-badge', count),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
   onNotificationClick: (callback) => ipcRenderer.on('notification-clicked', callback),
-  saveTempImage: (data) => ipcRenderer.invoke('save-temp-image', data)
+  saveTempImage: (data) => ipcRenderer.invoke('save-temp-image', data),
+  copyImageToClipboard: (dataUrl) => ipcRenderer.invoke('copy-image-to-clipboard', dataUrl)
 });
 
 window.addEventListener('DOMContentLoaded', () => {
   let lastCount = 0;
+
+  // Convert image to base64 data URL for clipboard
+  async function imageToDataUrl(imgElement) {
+    const src = imgElement.src;
+
+    if (src.startsWith('data:')) {
+      return src;
+    }
+
+    if (src.startsWith('blob:')) {
+      try {
+        const response = await fetch(src);
+        const blob = await response.blob();
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        return null;
+      }
+    }
+
+    return null;
+  }
+
+  // Show context menu for copying image
+  function showImageContextMenu(x, y, imgElement) {
+    document.getElementById('electron-context-menu')?.remove();
+
+    const menu = document.createElement('div');
+    menu.id = 'electron-context-menu';
+    menu.style.cssText = `position:fixed;left:${x}px;top:${y}px;background:#233138;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,0.4);z-index:999999;min-width:150px;padding:6px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif`;
+
+    const copyItem = document.createElement('div');
+    copyItem.textContent = 'Copy Image';
+    copyItem.style.cssText = `padding:10px 16px;cursor:pointer;color:#e9edef;font-size:14px`;
+    copyItem.onmouseenter = () => copyItem.style.background = '#3b4a54';
+    copyItem.onmouseleave = () => copyItem.style.background = 'transparent';
+    copyItem.onclick = async () => {
+      copyItem.textContent = 'Copying...';
+      copyItem.style.pointerEvents = 'none';
+
+      const dataUrl = await imageToDataUrl(imgElement);
+      const success = dataUrl && (await ipcRenderer.invoke('copy-image-to-clipboard', dataUrl)).success;
+      copyItem.textContent = success ? 'Copied!' : 'Failed';
+      copyItem.style.color = success ? '#00a884' : '#ff6b6b';
+      setTimeout(() => menu.remove(), 500);
+    };
+
+    menu.appendChild(copyItem);
+    document.body.appendChild(menu);
+
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) menu.style.left = `${window.innerWidth - rect.width - 10}px`;
+    if (rect.bottom > window.innerHeight) menu.style.top = `${window.innerHeight - rect.height - 10}px`;
+
+    const removeMenu = (e) => {
+      if (!menu.contains(e.target)) {
+        menu.remove();
+        document.removeEventListener('click', removeMenu);
+        document.removeEventListener('contextmenu', removeMenu);
+      }
+    };
+    setTimeout(() => {
+      document.addEventListener('click', removeMenu);
+      document.addEventListener('contextmenu', removeMenu);
+    }, 0);
+  }
+
+  // Check if element is inside the full-screen image viewer
+  function isInFullScreenViewer(element) {
+    let parent = element.parentElement;
+    while (parent) {
+      const style = window.getComputedStyle(parent);
+      if (parseInt(style.zIndex) > 100 && style.position === 'fixed') return true;
+      if (parent.getAttribute('role') === 'dialog' ||
+          parent.getAttribute('aria-modal') === 'true') return true;
+      parent = parent.parentElement;
+    }
+    return false;
+  }
+
+  // Right-click on images in full-screen viewer to copy
+  document.addEventListener('contextmenu', (event) => {
+    const imgElement = event.target.closest('img');
+    if (!imgElement || !isInFullScreenViewer(imgElement)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    showImageContextMenu(event.clientX, event.clientY, imgElement);
+  }, true);
 
   function updateBadgeCount() {
     const match = document.title.match(/\((\d+)\)/);
