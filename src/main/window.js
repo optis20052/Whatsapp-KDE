@@ -184,6 +184,75 @@ export function createMainWindow() {
         }
       })();
     `).catch(() => {});
+
+    // Inject drag-and-drop handler - convert blob URLs to actual files for KDE/Dolphin
+    win.webContents.executeJavaScript(`
+      (function() {
+        const imageCache = new Map();
+        const pendingFetches = new Map();
+
+        async function cacheImage(src) {
+          if (imageCache.has(src) || pendingFetches.has(src)) return;
+
+          const fetchPromise = (async () => {
+            try {
+              const response = await fetch(src);
+              const blob = await response.blob();
+
+              const mimeType = blob.type || 'image/jpeg';
+              const ext = mimeType.split('/')[1].replace('jpeg', 'jpg');
+              const filename = 'whatsapp-image-' + Date.now() + '.' + ext;
+
+              const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(blob);
+              });
+
+              if (window.electronAPI && window.electronAPI.saveTempImage) {
+                const fileUrl = await window.electronAPI.saveTempImage({ dataUrl, filename });
+                if (fileUrl) {
+                  imageCache.set(src, fileUrl);
+                  setTimeout(() => imageCache.delete(src), 60000);
+                }
+              }
+            } catch (e) {}
+            finally { pendingFetches.delete(src); }
+          })();
+
+          pendingFetches.set(src, fetchPromise);
+        }
+
+        // Pre-fetch on mousedown
+        document.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          const img = e.target.closest('img');
+          if (img && img.src && img.src.startsWith('blob:')) cacheImage(img.src);
+        }, true);
+
+        // Pre-fetch on hover for message images
+        document.addEventListener('mouseover', (e) => {
+          const img = e.target.closest('img');
+          if (!img || !img.src || !img.src.startsWith('blob:')) return;
+          if (img.closest('[data-id]') || img.closest('[class*="message"]')) cacheImage(img.src);
+        }, true);
+
+        // Use cached file:// path in dragstart
+        document.addEventListener('dragstart', (e) => {
+          const img = e.target.closest('img');
+          if (!img || !img.src || !img.src.startsWith('blob:')) return;
+
+          const fileUrl = imageCache.get(img.src);
+          if (fileUrl) {
+            e.dataTransfer.setData('text/uri-list', fileUrl);
+            e.dataTransfer.setData('text/plain', fileUrl);
+            e.dataTransfer.effectAllowed = 'copy';
+          } else {
+            e.preventDefault();
+          }
+        }, true);
+      })();
+    `).catch(() => {});
   });
 
   win.on('close', () => {

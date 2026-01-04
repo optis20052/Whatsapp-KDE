@@ -3,6 +3,9 @@ import { showNotification } from './notifications.js';
 import { updateTrayIcon } from './tray.js';
 import { exec } from 'child_process';
 import dbusNative from '@homebridge/dbus-native';
+import path from 'path';
+import fs from 'fs';
+import os from 'os';
 
 let currentBadgeCount = 0;
 let sessionBus = null;
@@ -61,6 +64,23 @@ export function setupIpcHandlers(mainWindow) {
 
   ipcMain.on('show-notification', (event, data) => {
     showNotification(data, mainWindow);
+  });
+
+  // Save image to temp file and return file:// path for drag-and-drop
+  ipcMain.handle('save-temp-image', async (event, { dataUrl, filename }) => {
+    try {
+      const tempDir = path.join(os.tmpdir(), 'whatsapp-electron-drag');
+      fs.mkdirSync(tempDir, { recursive: true });
+
+      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+      const tempPath = path.join(tempDir, filename);
+
+      fs.writeFileSync(tempPath, Buffer.from(base64Data, 'base64'));
+
+      return 'file://' + tempPath;
+    } catch (error) {
+      return null;
+    }
   });
 }
 

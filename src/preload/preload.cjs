@@ -4,7 +4,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   sendNotification: (data) => ipcRenderer.send('show-notification', data),
   updateBadge: (count) => ipcRenderer.send('update-badge', count),
   getAppVersion: () => ipcRenderer.invoke('get-app-version'),
-  onNotificationClick: (callback) => ipcRenderer.on('notification-clicked', callback)
+  onNotificationClick: (callback) => ipcRenderer.on('notification-clicked', callback),
+  saveTempImage: (data) => ipcRenderer.invoke('save-temp-image', data)
 });
 
 window.addEventListener('DOMContentLoaded', () => {
