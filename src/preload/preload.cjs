@@ -12,6 +12,59 @@ contextBridge.exposeInMainWorld('electronAPI', {
 window.addEventListener('DOMContentLoaded', () => {
   let lastCount = 0;
 
+  // Focus preservation: prevent input focus loss when new messages arrive
+  let lastFocusedInput = null;
+  let isUserInteracting = false;
+
+  function isInputElement(el) {
+    if (!el) return false;
+    return el.isContentEditable ||
+           el.tagName === 'INPUT' ||
+           el.tagName === 'TEXTAREA' ||
+           el.getAttribute('role') === 'textbox';
+  }
+
+  // Track when user focuses on an input/editable element
+  document.addEventListener('focusin', (e) => {
+    if (isInputElement(e.target)) {
+      lastFocusedInput = e.target;
+    }
+  }, true);
+
+  // Track user interactions to know when focus changes are intentional
+  document.addEventListener('mousedown', () => {
+    isUserInteracting = true;
+    setTimeout(() => { isUserInteracting = false; }, 100);
+  }, true);
+
+  document.addEventListener('keydown', (e) => {
+    // Tab key or Escape means intentional focus change
+    if (e.key === 'Tab' || e.key === 'Escape') {
+      isUserInteracting = true;
+      setTimeout(() => { isUserInteracting = false; }, 100);
+    }
+  }, true);
+
+  // Restore focus if it was unexpectedly lost (not by user action)
+  document.addEventListener('focusout', (e) => {
+    if (!lastFocusedInput) return;
+    if (e.target !== lastFocusedInput) return;
+    if (isUserInteracting) return; // User caused focus change, don't interfere
+
+    const inputToRestore = lastFocusedInput;
+
+    // Check after the focus has settled
+    setTimeout(() => {
+      const activeEl = document.activeElement;
+      // If focus didn't go to another input element, restore it
+      if (!isInputElement(activeEl)) {
+        if (inputToRestore && document.contains(inputToRestore)) {
+          inputToRestore.focus();
+        }
+      }
+    }, 0);
+  }, true);
+
   // Convert image to base64 data URL for clipboard
   async function imageToDataUrl(imgElement) {
     const src = imgElement.src;
